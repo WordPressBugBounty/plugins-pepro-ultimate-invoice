@@ -9,20 +9,20 @@ Developer: amirhp.com
 Author URI: https://pepro.dev/
 Developer URI: https://amirhp.com
 Plugin URI: https://peprodev.com/pepro-woocommerce-ultimate-invoice/
-Version: 2.0.8
-Stable tag: 2.0.8
-Tested up to: 6.6.1
-WC tested up to: 9.2.3
+Version: 2.1.0
+Stable tag: 2.1.0
+Tested up to: 6.7
+WC tested up to: 9.6.2
 Requires at least: 5.0
 Requires PHP: 7.0
 WC requires at least: 5.0
 Text Domain: pepro-ultimate-invoice
 Domain Path: /languages
-Copyright: (c) 2024 Pepro Dev. Group, All rights reserved.
+Copyright: (c) 2025 Pepro Dev. Group, All rights reserved.
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * @Last modified by: amirhp-com <its@amirhp.com>
- * @Last modified time: 2024/09/08 10:16:13
+ * @Last modified time: 2025/02/22 14:32:23
  */
 
 namespace peproulitmateinvoice;
@@ -44,12 +44,12 @@ if (!class_exists("PeproUltimateInvoice")) {
    */
   class PeproUltimateInvoice {
     public $td;
+    public $version = "2.1.0";
     public $plugin_dir;
     public $plugin_url;
     public $assets_url;
     public $plugin_basename;
     public $plugin_file;
-    public $version;
     public $db_slug;
     public $title;
     public $url;
@@ -75,9 +75,8 @@ if (!class_exists("PeproUltimateInvoice")) {
      * @license https://pepro.dev/license Pepro.dev License
      */
     public function __construct() {
-      load_plugin_textdomain("pepro-ultimate-invoice", false, dirname(plugin_basename(__FILE__)) . "/languages/");
+      add_action("after_setup_theme", function(){load_plugin_textdomain("pepro-ultimate-invoice", false, dirname(plugin_basename(__FILE__)) . "/languages/");});
       $this->td                   = "pepro-ultimate-invoice";
-      $this->version              = "2.0.8";
       $this->db_slug              = $this->td;
       $this->plugin_file          = __FILE__;
       $this->plugin_dir           = plugin_dir_path(__FILE__);
@@ -404,7 +403,7 @@ if (!class_exists("PeproUltimateInvoice")) {
         // remove_all_actions("woocommerce_before_order_itemmeta", 10);
       }
 
-      // public methods to get receipts 
+      // public methods to get receipts
       if (isset($_GET["invoice"]) && !empty(trim(sanitize_text_field($_GET["invoice"])))) {
         $order_id = (int) trim(sanitize_text_field($_GET["invoice"]));
         if (wc_get_order($order_id)) {
@@ -412,20 +411,14 @@ if (!class_exists("PeproUltimateInvoice")) {
         }
       }
       if (isset($_GET["invoice-pdf"]) && !empty(trim(sanitize_text_field($_GET["invoice-pdf"])))) {
-        $force_download = false;
-        if (isset($_GET["download"]) && !empty(sanitize_text_field($_GET["download"]))) {
-          $force_download = true;
-        }
+        $force_download = isset($_GET["download"]) && !empty(sanitize_text_field($_GET["download"])) ? true : false;
         die($this->print->create_pdf((int) trim(sanitize_text_field($_GET["invoice-pdf"])), $force_download));
       }
       if (isset($_GET["invoice-slips"]) && !empty(trim(sanitize_text_field($_GET["invoice-slips"])))) {
         die($this->print->create_slips((int) trim(sanitize_text_field($_GET["invoice-slips"]))));
       }
       if (isset($_GET["invoice-slips-pdf"]) && !empty(trim(sanitize_text_field($_GET["invoice-slips-pdf"])))) {
-        $force_download = false;
-        if (isset($_GET["download"]) && !empty(sanitize_text_field($_GET["download"]))) {
-          $force_download = true;
-        }
+        $force_download = isset($_GET["download"]) && !empty(sanitize_text_field($_GET["download"])) ? true : false;
         die($this->print->create_slips_pdf((int) trim(sanitize_text_field($_GET["invoice-slips-pdf"])), $force_download));
       }
       if (isset($_GET["invoice-inventory"]) && !empty(trim(sanitize_text_field($_GET["invoice-inventory"])))) {
@@ -1683,7 +1676,7 @@ if (!class_exists("PeproUltimateInvoice")) {
         "puiw_send_invoices_via_email_shpmngrs"       => "",
         "puiw_attach_pdf_invoices_to_mail"            => "yes",
         "puiw_automation_title"                       => "",
-        "puiw_allow_guest_users_view_invoices"        => "",
+        "puiw_allow_guest_users_view_invoices"        => "no",
         "puiw_allow_pdf_guest"                        => "",
         "puiw_allow_users_have_invoices"              => "yes",
         "puiw_allow_pdf_customer"                     => "both",
