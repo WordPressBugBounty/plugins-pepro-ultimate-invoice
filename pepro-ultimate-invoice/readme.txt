@@ -3,19 +3,25 @@ Contributors: peprodev, amirhpcom, blackswanlab
 Donate link: https://pepro.dev/donate
 Tags: woocommerce invoice, pdf invoice, persian, WooCommerce
 Requires at least: 5.0
-Tested up to: 6.7
-Version: 2.1.0
-Stable tag: 2.1.0
-Requires PHP: 7.0
+Tested up to: 6.9
+Version: 2.2.5
+Stable tag: 2.2.5
+Requires PHP: 7.4
 WC requires at least: 5.0
-WC tested up to: 9.6.2
+WC tested up to: 10.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-The Most Advanced Invoice Plugin you were looking for!
-Create HTML/PDF Invoices of WooCommerce Orders, Attach PDF Invoice to Mail and Let customers download beautiful-customizable styled invoices.
+Advanced WooCommerce invoice plugin: create customizable HTML/PDF invoices, attach to emails, and let customers download styled invoices easily.
 
 == Description ==
+
+### Merry Christmas & Happy New Year 2026! 🎄🎉
+Thank you for using and supporting this free plugin! If you have any questions or need assistance, please ask on the WordPress support forum. We're here to help!
+
+**Update to v2.2.3 to get the new Thermal Invoice feature and many more improvements!**
+
+-----------------------
 
 ## **Ultimate Invoice plugin for WooCommerce!**
 
@@ -35,7 +41,6 @@ This plugin lets you to Generate Awesome Invoices for WooCommerce orders and:
 -   Alter plugins via Action/Filter hooks
 -   and .....
 
-
 ### Hot Features since Version 1.4 🔥
 - Bulk Download Invoices PDF as ZIP Archive
 - Bulk Print Invoices Inventory Reports
@@ -47,7 +52,6 @@ This plugin lets you to Generate Awesome Invoices for WooCommerce orders and:
 - Added: Fully Compatibility with [WooCommerce Extra Product Options by ThemeComplete](https://codecanyon.net/item/woocommerce-extra-product-options/7908619)
 - Added: Fully Compatibility with *Any Standard* plugins that adds and shows Order item metas
 - Added: Added Integration Section in Settings
-
 
 
 -----------------------
@@ -162,53 +166,66 @@ You can help us improve our works by committing your changes to our Github repos
 
 == Upgrade Notice ==
 
-= v2.1.0 / 2025-02-22 / 1403-12-04 =
-- Fixed Security Issue
-- Changed Default Security Options
+**Merry Christmas & Happy New Year 2026! 🎄🎉**
 
-= v2.0.9 / 2024-11-13 / 1403-08-23 =
-- WP 6.7 Compatibility
-- Fixed Translation load
+Upgrade to enjoy the latest features and security improvements.
 
+Thank you for using and supporting this free plugin! If you have any questions or need assistance, please ask on the WordPress support forum. We're here to help!
 
-
-== Changelog ==
+This update adds full thermal printer support, improves WooCommerce HPOS compatibility, and includes important PDF and performance improvements. Recommended for all users.
 
 For full changelog please view [Github Repo.](https://github.com/peprodev/ultimate-invoice)
 
-= v2.1.0 / 2025-02-22 / 1403-12-04 =
-- Fixed Security Issue
-- Changed Default Security Options
+== Changelog ==
 
-= v2.0.9 / 2024-11-13 / 1403-08-23 =
-- WP 6.7 Compatibility
-- Fixed Translation load
+**Merry Christmas & Happy New Year 2026! 🎄🎉**
 
-= v2.0.8 / 2024-09-08 / 1403-06-18 =
-- Fixed PDF invoice files does not have .pdf suffix
+Thank you for using and supporting this free plugin! If you have any questions or need assistance, please ask on the WordPress support forum. We're here to help!
 
-= v2.0.7 / 2024-08-24 / 1403-06-03 =
-- Fixed Vulnerability reported by LVT-tholv2k
+For full changelog please view [Github Repo.](https://github.com/peprodev/ultimate-invoice)
 
-= v2.0.6 / 2024-07-24 / 1403-05-02 =
-- Fixed undefined invoice template index name
-- Fix HPOS Incompatibility
+= v2.2.5 | 2025-12-31 | 1404-10-10 =
+- Fixed: Error preventing checkout process
+- Fixed: Missing fonts added to the plugin
 
-= v2.0.5 / 2024-06-23 / 1403-04-03 =
-- Dev: added `puiw_create_pdf_Mpdf_options` filter hook
-- Dev: added `puiw_create_slips_pdf_Mpdf_options` filter hook
-- Dev: added `puiw_parse_pdf_template` filter hook
+= v2.2.4 | 2025-12-28 | 1404-10-07 =
+- Fixed: Thermal Invoice height
+- Removed: Extra mPDF fonts (not used widely)
+- Improved: Persian translations
 
-= v2.0.4 / 2024-06-14 / 1403-03-25 =
-- Fixed `Uncaught Error: Call to undefined method WP Post:get_id()`
+= v2.2.3 | 2025-12-27 | 1404-10-06 =
+- Added: Option to Print Order Notes on Shipping Slips (RTL-Template Only)
+- Added: Option to Set Different PDF Page-size for Invoices and Slips
+- Added: Option to Set PDF Margins (Top, Right, Bottom, Left, Header, Footer)
+- Fixed: Breaking Order Items table into multiple pages
+- Fixed: Icons loaded incorrectly on Admin Orders Screen
+- Fixed: Not showing order notes on PDF Invoices
 
-= v2.0.3 / 2024-06-13 / 1403-03-24 =
-- Fix HPOS error of incompatibility
-
-= v2.0.2 / 2024-05-02 / 1403-02-13 =
-- WooCommerce 8.8.3 Compatibility
-- Added: Save Shipping ResID Ajax-button
-- Enhanced: Security in Migration settings (Thanks to Darius S from patchstack.com)
+= v2.2.2 | 2025-12-25 | 1404-10-04 =
+- Added: New Feature to Support Thermal Printer Labels (80mm / پرینتر حرارتی / فیش پرینتر)
+- Added: New Template for Thermal Printer Invoices
+- Added: Download POS Invoices PDF as ZIP Archive
+- Improvement: Changed *minimum PHP requirement to 7.4* 🙋‍♂️
+- Improvement: WooCommerce HPOS Full Compatibility
+- Improvement: Compatibility with WP 6.9 and WC 10.4
+- Improvement: PDF Zip Archive Comments Formatting
+- Improvement: Order Notes (Customer & Shop Manager) Display in PDF Invoices
+- Improvement: Options/Setting Page UI/UX Improvements
+- Improvement: Default Setting setup for New Installations
+- Improvement: Code Optimization and Refactoring
+- Improvement: Updated mPDF Library to v8.2.7
+- Improvement: Allowed HTML Tags in Address Display method field
+- Improvement: Invoice Templates Content & Display styles
+- Improvement: Added Built-in mPDF fonts for better PDF Styling
+- Fixed: Minor Bug Fixes
+- Fixed: Security Issue CVE-2025-54869
+- Fixed: Shop Manager note not saving issue
+- Fixed: Shipping track number not saving issue
+- Fixed: Division by zero error when calculating discounts (thanks to [@isaeedam](https://profiles.wordpress.org/isaeedam/))
+- Fixed: Bulk Download Invoices PDF as ZIP Archive option not appearing in bulk actions dropdown
+- Fixed: Loading Translation Issues
+- Developers: Added New hook `puiw_create_pdf_fit_height` for controlling PDF fit to height option
+- Developers: Improvement `puiw_printinvoice_check_user_has_access` hook to control access manager checks
 
 == About Us ==
 

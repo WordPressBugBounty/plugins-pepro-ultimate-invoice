@@ -3,7 +3,7 @@
  * @Author: Amirhossein Hosseinpour <https://amirhp.com>
  * @Date Created: 2022/10/15 13:44:52
  * @Last modified by: amirhp-com <its@amirhp.com>
- * @Last modified time: 2025/02/22 14:40:20
+ * @Last modified time: 2025/12/28 14:00:17
  */
 
 namespace peproulitmateinvoice;
@@ -12,7 +12,7 @@ defined("ABSPATH") or die("Pepro Ultimate Invoice :: Unauthorized Access!");
 
 if (!class_exists("PeproUltimateInvoice_Print")) {
   class PeproUltimateInvoice_Print {
-    protected $td;
+    protected $td = "pepro-ultimate-invoice";
     protected $fn;
     protected $parent;
     protected $hide_bundles_parent;
@@ -25,7 +25,6 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
     protected $_woosb_show_bundled_prefix;
     protected $_woosb_show_bundles_prefix;
     public function __construct() {
-      $this->td = "pepro-ultimate-invoice";
       global $PeproUltimateInvoice;
       $this->parent = $PeproUltimateInvoice;
       $this->fn = new PeproUltimateInvoice_Template;
@@ -35,13 +34,15 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       $this->hide_bundles_parent = 0;
       $this->hide_bundles_child = 0;
 
-      $this->_woosb_show_bundles           = $this->fn->get_woosb_show_bundles();
-      $this->_woosb_show_bundles_subtitle  = $this->fn->get_woosb_show_bundles_subtitle();
-      $this->_woosb_show_bundled_products  = $this->fn->get_woosb_show_bundled_products();
-      $this->_woosb_show_bundled_subtitle  = $this->fn->get_woosb_show_bundled_subtitle();
-      $this->_woosb_show_bundled_hierarchy = $this->fn->get_woosb_show_bundled_hierarchy();
-      $this->_woosb_show_bundled_prefix    = $this->fn->get_woosb_bundled_subtitle_prefix(_x("Bundled in:", "wc-setting", $this->td));
-      $this->_woosb_show_bundles_prefix    = $this->fn->get_woosb_bundles_subtitle_prefix(_x("Bundled products:", "wc-setting", $this->td));
+      add_action("init", function(){
+        $this->_woosb_show_bundles           = $this->fn->get_woosb_show_bundles();
+        $this->_woosb_show_bundles_subtitle  = $this->fn->get_woosb_show_bundles_subtitle();
+        $this->_woosb_show_bundled_products  = $this->fn->get_woosb_show_bundled_products();
+        $this->_woosb_show_bundled_subtitle  = $this->fn->get_woosb_show_bundled_subtitle();
+        $this->_woosb_show_bundled_hierarchy = $this->fn->get_woosb_show_bundled_hierarchy();
+        $this->_woosb_show_bundled_prefix    = $this->fn->get_woosb_bundled_subtitle_prefix(_x("Bundled in:", "wc-setting", "pepro-ultimate-invoice"));
+        $this->_woosb_show_bundles_prefix    = $this->fn->get_woosb_bundles_subtitle_prefix(_x("Bundled products:", "wc-setting", "pepro-ultimate-invoice"));
+      });
       add_filter("puiw_order_items", array($this, "puiw_sort_order_items"), 2, 2);
       if ($this->_woosb_show_bundles == "no") {
         add_filter("puiw_order_items", array($this, "woosb_puiw_hide_bundles_parent"), 10, 2);
@@ -79,6 +80,13 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
 
       return $opts;
     }
+    /**
+     * Undocumented function
+     *
+     * @param  int $order_id
+     * @param  \WC_Order $order
+     * @return void
+     */
     public function get_default_dynamic_params($order_id, $order) {
       $opts = array(
         "order_date_created"                     => $order->get_date_created() ? $this->fn->get_date($order->get_date_created()) : "",
@@ -177,6 +185,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         "show_order_items"                       => $this->fn->get_show_order_items(),
         "show_order_total"                       => $this->fn->get_show_order_total(),
         "show_order_note"                        => $this->fn->get_show_order_note(),
+        "show_order_note_slip"                   => $this->fn->get_show_order_note_slip(),
         "show_user_uin"                          => $this->fn->get_show_user_uin(),
         "show_shipping_ref_id"                   => $this->fn->get_show_shipping_ref_id(),
         "show_price_template"                    => $this->fn->get_show_price_template(),
@@ -189,10 +198,10 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         "show_product_tax"                       => $this->fn->get_show_product_tax(),
         "show_product_sku"                       => $this->fn->get_show_product_sku(),
         "show_product_sku2"                      => $this->fn->get_show_product_sku2(),
-        "trnslt__print"                          => __("Print", $this->td),
-        "trnslt__seller"                         => __("Seller", $this->td),
-        "trnslt__buyer"                          => __("Buyer", $this->td),
-        "trnslt__dates"                          => __("Extras", $this->td),
+        "trnslt__print"                          => __("Print", "pepro-ultimate-invoice"),
+        "trnslt__seller"                         => __("Seller", "pepro-ultimate-invoice"),
+        "trnslt__buyer"                          => __("Buyer", "pepro-ultimate-invoice"),
+        "trnslt__dates"                          => __("Extras", "pepro-ultimate-invoice"),
         "show_shipping_ref_id_colspan"           => 1,
         "invoice_final_prices_pre_colspan"       => 7,
         "product_description_colspan"            => 4,
@@ -202,36 +211,35 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       );
       $use_billing = $opts["show_shipping_address"];
 
-      $opts["invoice_id"]                 = apply_filters("puiw_printinvoice_getinvoice_id",                $opts["invoice_prefix"] . ($opts["invoice_start"] + $order->get_id()) . $opts["invoice_suffix"], $opts, $order);
-      $opts["invoice_id_en"]              = apply_filters("puiw_printinvoice_getinvoice_id_en",             $opts["invoice_prefix"] . ($opts["invoice_start"] + $order->get_id()) . $opts["invoice_suffix"], $opts, $order);
-      $opts["invoice_id_nm"]              = apply_filters("puiw_printinvoice_getinvoice_id_raw",            $order->get_id(), $opts, $order);
-      $opts["invoice_title"]              = apply_filters("puiw_printinvoice_getinvoice_title",             sprintf($this->fn->get_invoice_title(__("Invoice %s", $this->td)), $opts["invoice_id"]), $opts, $order);
-      $opts["order_payment_method"]       = apply_filters("puiw_printinvoice_getinvoice_payment_method",    $order->get_payment_method_title(), $opts, $order);
-      $opts["order_shipping_method"]      = apply_filters("puiw_printinvoice_getinvoice_shipping_method",   $order->get_shipping_method(), $opts, $order);
-      $opts["customer_email"]             = apply_filters("puiw_printinvoice_getcustomer_email",            $order->get_billing_email(), $opts, $order);
-      $opts["customer_phone"]             = apply_filters("puiw_printinvoice_getcustomer_phone",            $order->get_billing_phone(), $opts, $order);
-      $opts["customer_fname"]             = apply_filters("puiw_printinvoice_getcustomer_firstname", ($use_billing == "billing") ? $order->get_billing_first_name() :  $order->get_shipping_first_name(), $opts, $order, $use_billing);
-      $opts["customer_lname"]             = apply_filters("puiw_printinvoice_getcustomer_lastname", ($use_billing == "billing") ? $order->get_billing_last_name() :   $order->get_shipping_last_name(), $opts, $order, $use_billing);
-      $opts["customer_fullname"]          = apply_filters("puiw_printinvoice_getcustomer_fullname", ($use_billing == "billing") ? "{$order->get_billing_first_name()} {$order->get_billing_last_name()}" : "{$order->get_shipping_first_name()} {$order->get_shipping_last_name()}", $opts, $order, $use_billing);
-      $opts["customer_company"]           = apply_filters("puiw_printinvoice_getcustomer_company", ($use_billing == "billing") ? $order->get_billing_company() :     $order->get_shipping_company(), $opts, $order, $use_billing);
-      $opts["customer_country"]           = apply_filters("puiw_printinvoice_getcustomer_country", ($use_billing == "billing") ? ($order->get_billing_country() ? $order->get_billing_country() : "") : ($order->get_shipping_country() ? $order->get_shipping_country() : ""), $opts, $order, $use_billing);
-      $opts["customer_state"]             = apply_filters("puiw_printinvoice_getcustomer_state", ($use_billing == "billing") ? ($order->get_billing_state() ? $order->get_billing_state() : "") : ($order->get_shipping_state() ? $order->get_shipping_state() : ""), $opts, $order, $use_billing);
-      $opts["customer_city"]              = apply_filters("puiw_printinvoice_getcustomer_city", ($use_billing == "billing") ? ($order->get_billing_city() ? $order->get_billing_city() : "") : ($order->get_shipping_city() ? $order->get_shipping_city() : ""), $opts, $order, $use_billing);
-      $opts["customer_address_1"]         = apply_filters("puiw_printinvoice_getcustomer_address_1", ($use_billing == "billing") ? $order->get_billing_address_1() :   $order->get_shipping_address_1(), $opts, $order, $use_billing);
-      $opts["customer_address_2"]         = apply_filters("puiw_printinvoice_getcustomer_address_2", ($use_billing == "billing") ? $order->get_billing_address_2() :   $order->get_shipping_address_2(), $opts, $order, $use_billing);
-      $opts["customer_postcode"]          = apply_filters("puiw_printinvoice_getcustomer_postcode", ($use_billing == "billing") ? $order->get_billing_postcode() :    $order->get_shipping_postcode(), $opts, $order, $use_billing);
-      $opts["customer_signature"]         = apply_filters("puiw_printinvoice_getinvoicecustomer_signature", get_post_meta($order->get_id(), '_shipping_puiw_customer_signature', true), $opts, $order);
-      $opts["order_transaction_ref_id"]   = apply_filters("puiw_printinvoice_getinvoice_shipping_method",   get_post_meta($order->get_id(), '_transaction_id', true), $opts, $order);
-      $opts["customer_uin"]               = apply_filters("puiw_printinvoice_getcustomer_uin",              get_post_meta($order->get_id(), 'puiw_billing_uin', true), $opts, $order);
-      $opts["invoice_qrcode"]             = apply_filters("puiw_printinvoice_getinvoice_qrdata",            add_query_arg("invoice", $order->get_id(), home_url()), $opts, $order);
+      $opts["invoice_id"]                 = apply_filters("puiw_printinvoice_getinvoice_id"               , $opts["invoice_prefix"] . ($opts["invoice_start"] + $order->get_id()) . $opts["invoice_suffix"], $opts, $order);
+      $opts["invoice_id_en"]              = apply_filters("puiw_printinvoice_getinvoice_id_en"            , $opts["invoice_prefix"] . ($opts["invoice_start"] + $order->get_id()) . $opts["invoice_suffix"], $opts, $order);
+      $opts["invoice_id_nm"]              = apply_filters("puiw_printinvoice_getinvoice_id_raw"           , $order->get_id(), $opts, $order);
+      $opts["invoice_title"]              = apply_filters("puiw_printinvoice_getinvoice_title"            , sprintf($this->fn->get_invoice_title(__("Invoice %s", "pepro-ultimate-invoice")), $opts["invoice_id"]), $opts, $order);
+      $opts["order_payment_method"]       = apply_filters("puiw_printinvoice_getinvoice_payment_method"   , $order->get_payment_method_title(), $opts, $order);
+      $opts["order_shipping_method"]      = apply_filters("puiw_printinvoice_getinvoice_shipping_method"  , $order->get_shipping_method(), $opts, $order);
+      $opts["customer_email"]             = apply_filters("puiw_printinvoice_getcustomer_email"           , $order->get_billing_email(), $opts, $order);
+      $opts["customer_phone"]             = apply_filters("puiw_printinvoice_getcustomer_phone"           , $order->get_billing_phone(), $opts, $order);
+      $opts["customer_fname"]             = apply_filters("puiw_printinvoice_getcustomer_firstname"       , ($use_billing == "billing") ? $order->get_billing_first_name() :  $order->get_shipping_first_name(), $opts, $order, $use_billing);
+      $opts["customer_lname"]             = apply_filters("puiw_printinvoice_getcustomer_lastname"        , ($use_billing == "billing") ? $order->get_billing_last_name() :   $order->get_shipping_last_name(), $opts, $order, $use_billing);
+      $opts["customer_fullname"]          = apply_filters("puiw_printinvoice_getcustomer_fullname"        , ($use_billing == "billing") ? "{$order->get_billing_first_name()} {$order->get_billing_last_name()}" : "{$order->get_shipping_first_name()} {$order->get_shipping_last_name()}", $opts, $order, $use_billing);
+      $opts["customer_company"]           = apply_filters("puiw_printinvoice_getcustomer_company"         , ($use_billing == "billing") ? $order->get_billing_company() : $order->get_shipping_company(), $opts, $order, $use_billing);
+      $opts["customer_country"]           = apply_filters("puiw_printinvoice_getcustomer_country"         , ($use_billing == "billing") ? ($order->get_billing_country() ? $order->get_billing_country() : "") : ($order->get_shipping_country() ? $order->get_shipping_country() : ""), $opts, $order, $use_billing);
+      $opts["customer_state"]             = apply_filters("puiw_printinvoice_getcustomer_state"           , ($use_billing == "billing") ? ($order->get_billing_state() ? $order->get_billing_state() : "") : ($order->get_shipping_state() ? $order->get_shipping_state() : ""), $opts, $order, $use_billing);
+      $opts["customer_city"]              = apply_filters("puiw_printinvoice_getcustomer_city"            , ($use_billing == "billing") ? ($order->get_billing_city() ? $order->get_billing_city() : "") : ($order->get_shipping_city() ? $order->get_shipping_city() : ""), $opts, $order, $use_billing);
+      $opts["customer_address_1"]         = apply_filters("puiw_printinvoice_getcustomer_address_1"       , ($use_billing == "billing") ? $order->get_billing_address_1() :   $order->get_shipping_address_1(), $opts, $order, $use_billing);
+      $opts["customer_address_2"]         = apply_filters("puiw_printinvoice_getcustomer_address_2"       , ($use_billing == "billing") ? $order->get_billing_address_2() :   $order->get_shipping_address_2(), $opts, $order, $use_billing);
+      $opts["customer_postcode"]          = apply_filters("puiw_printinvoice_getcustomer_postcode"        , ($use_billing == "billing") ? $order->get_billing_postcode() :    $order->get_shipping_postcode(), $opts, $order, $use_billing);
+      $opts["customer_signature"]         = apply_filters("puiw_printinvoice_getinvoicecustomer_signature", $order->get_meta('_shipping_puiw_customer_signature', true), $opts, $order);
+      $opts["order_transaction_ref_id"]   = apply_filters("puiw_printinvoice_getinvoice_shipping_method"  , $order->get_transaction_id(), $opts, $order);
+      $opts["customer_uin"]               = apply_filters("puiw_printinvoice_getcustomer_uin"             , $order->get_meta('puiw_billing_uin', true), $opts, $order);
+      $opts["invoice_qrcode"]             = apply_filters("puiw_printinvoice_getinvoice_qrdata"           , add_query_arg("invoice", $order->get_id(), home_url()), $opts, $order);
       $opts["invoice_qrcode"]             = wp_strip_all_tags($opts["invoice_qrcode"], true);
-
+      $opts["customer_company"] = !empty($opts["customer_company"]) ? "( ".$opts["customer_company"]." )" : "";
       $get_base_countries = WC()->countries->__get('countries');
       $get_base_states = WC()->countries->get_states($opts["customer_country"]);
 
-      $opts["customer_address"]           = str_replace(
-        apply_filters(
-          "puiw_printinvoice_address_template",
+      $opts["customer_address"] = str_replace(
+        apply_filters( "puiw_printinvoice_address_template",
           array(
             "[first_name]",
             "[last_name]",
@@ -271,7 +279,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         $this->fn->get_address_display_method()
       );
       // $opts["customer_address"]        = ($use_billing == "billing") ? $order->get_formatted_billing_address() : $order->get_formatted_shipping_address();
-      $opts["invoice_track_id"]           = get_post_meta($order->get_id(), 'puiw_invoice_track_id', true);
+      $opts["invoice_track_id"]           = $order->get_meta('puiw_invoice_track_id', true);
       $opts["invoice_track_id_en"]        = $opts["invoice_track_id"] ? $opts["invoice_track_id"] : "0000000000000000";
       $opts["invoice_final_price"]        = $order->get_formatted_order_total();
       $opts["invoice_final_prices"]       = $this->get_order_final_prices($order);
@@ -308,6 +316,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
           "invoice_track_id_en",
           "invoice_products_list",
           "customer_postcode",
+          "customer_address",
           "invoice_final_price",
           "store_postcode",
           "customer_postcode_barcode",
@@ -364,9 +373,13 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
           "invoice_products_list",
           "invoices_footer",
           "base_price",
+          "customer_address",
           "invoice_notes",
           "invoice_note_customer",
           "invoice_note_shopmngr",
+          "invoice_notes_slip",
+          "invoice_note_customer_slip",
+          "invoice_note_shopmngr_slip",
           "order_total",
           "custom_css_style",
           "custom_pdf_css_style",
@@ -466,21 +479,21 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         $this->CheckPDFRequirementsHTML(true);
       }
       if (!$order_id || empty(trim($order_id)) || !is_numeric(trim($order_id))) {
-        return __('Incorrect data!', $this->td);
+        return __('Incorrect data!', "pepro-ultimate-invoice");
       }
       (int) $order_id = trim($order_id);
       $order = wc_get_order($order_id);
       if (!$order) {
-        return __('Incorrect Order!', $this->td);
+        return __('Incorrect Order!', "pepro-ultimate-invoice");
       }
       if (!$skipAuth) {
         if ("HTML" == $MODE && !$this->has_access("HTML", $order)) {
           global $PeproUltimateInvoice;
-          $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+          $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
         }
         if ("PDF" == $MODE && !$this->has_access("PDF", $order)) {
           global $PeproUltimateInvoice;
-          $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+          $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
         }
       }
       ob_start();
@@ -493,29 +506,51 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       $keepOriginalHTMLtags  = $this->get_preserve_html_tags($opt, $order);
       $keepOriginalENnumbers = $this->get_preserve_english_numbers($opt, $order);
       do_action("puiw_printinvoice_before_create_html", $opt, $opts, $order);
+
       $main_css_style_inline = "";
-      $order_note_a = apply_filters("puiw_printinvoice_order_note_customer", "<strong>" . __("Note provided by Customer", $this->td) . "</strong><br><div>" . $this->fn->get_order_note($order, "a") . "</div>", $this->fn->get_order_note($order, "a"), $order, $opt);
-      $order_note_b = apply_filters("puiw_printinvoice_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", $this->td) . "</strong><br><div>" . $this->fn->get_order_note($order, "b") . "</div>", $this->fn->get_order_note($order, "b"), $order, $opt);
+      $order_note_a = apply_filters("puiw_printinvoice_order_note_customer", "<strong>" . __("Note provided by Customer", "pepro-ultimate-invoice") . "</strong><br><div>" . $this->fn->get_order_note($order, "a") . "</div>", $this->fn->get_order_note($order, "a"), $order, $opt);
+      $order_note_b = apply_filters("puiw_printinvoice_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", "pepro-ultimate-invoice") . "</strong><br><div>" . $this->fn->get_order_note($order, "b") . "</div>", $this->fn->get_order_note($order, "b"), $order, $opt);
+      $notes = ""; $opt["show_order_notes"] = "no";
+      $opt["show_invoice_note_customer"] = "no";
+      $opt["show_invoice_note_shopmngr"] = "no";
       switch ($opt["show_order_note"]) {
-          // hide_note_from_invoice, note_provided_by_customer, note_provided_by_shop_manager, note_provided_by_both
-        case 'note_provided_by_customer':
-          $notes = "<td>$order_note_a</td>";
-          $opt["show_order_note"] = "yes";
+        // hide_note_from_invoice, note_provided_by_customer, note_provided_by_shop_manager, note_provided_by_both
+        case "note_provided_by_customer":
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "a")))) {
+            $notes = "<td>$order_note_a</td>";
+            $opt["show_order_note"] = "yes";
+            $opt["show_invoice_note_customer"] = "yes";
+          }
           break;
-        case 'note_provided_by_shop_manager':
-          $notes = "<td>$order_note_b</td>";
-          $opt["show_order_note"] = "yes";
+        case "note_provided_by_shop_manager":
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "b")))) {
+            $notes = "<td>$order_note_b</td>";
+            $opt["show_order_note"] = "yes";
+            $opt["show_invoice_note_shopmngr"] = "yes";
+          }
           break;
-        case 'note_provided_by_both':
-          $notes = "<td>$order_note_b</td>
-                        <td>$order_note_a</td>";
+        case "note_provided_by_both":
+          $notes = "";
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "a")))) {
+            $notes .= "<td>$order_note_a</td>";
+            $opt["show_invoice_note_customer"] = "yes";
+          }
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "b")))) {
+            $notes .= "<td>$order_note_b</td>";
+            $opt["show_invoice_note_shopmngr"] = "yes";
+          }
           $opt["show_order_note"] = "yes";
           break;
         default:
           $notes = "";
           $opt["show_order_note"] = "no";
+          $opt["show_invoice_note_customer"] = "no";
+          $opt["show_invoice_note_shopmngr"] = "no";
           break;
       }
+      $opt["invoice_note_customer"] = $order_note_a;
+      $opt["invoice_note_shopmngr"] = $order_note_b;
+      $opt["invoice_notes"] = $notes;
       foreach ($opt as $key => $value) {
         if (substr($key, 0, 5) == "show_" && $value !== "yes") {
           $main_css_style_inline .= "[if~='$key']{display:none !important; visibility: hidden !important;}" . PHP_EOL;
@@ -527,7 +562,6 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
             $opt["{$key}_dn"] = 'display: none;';
           }
         }
-
         if ((substr($key, 0, 5) == "show_") && ($value == "yes") && ("PDF" == $MODE)) {
           $opt["{$key}_hide_css"] = '';
           $opt["{$key}_display_none"] = '';
@@ -588,40 +622,37 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         }
       }
       $templateDirpath = apply_filters("puiw_get_template_dir_path", $opt["template"], $order);
-      $opt["invoice_note_customer"] = $order_note_a;
-      $opt["invoice_note_shopmngr"] = $order_note_b;
-      $opt["invoice_notes"] = $notes;
       if ("PDF_EXTRA_STYLE" == $MODE) {
         return $main_css_style_inline . $opts["custom_pdf_css_style"];
       }
       if ("PDF" == $MODE) {
-        $template                     = file_get_contents("$templateDirpath/template.pdf.tpl");
+        $template = file_get_contents("$templateDirpath/template.pdf.tpl");
         if (!empty($part)) {
           $template  = file_get_contents("$templateDirpath/template.pdf.{$part}.tpl");
         }
-        $product_row_RAW              = file_get_contents("$templateDirpath/template.pdf.row.tpl");
+        $product_row_RAW = file_get_contents("$templateDirpath/template.pdf.row.tpl");
       } else {
         $extrainvoiceheaddata   = '';
-        $main_css_style         = file_get_contents("$templateDirpath/style.css");
+        $main_css_style = file_get_contents("$templateDirpath/style.css");
         if ($email_printout) {
           $main_css_style = file_get_contents("$templateDirpath/style.email.css");
         }
-        $main_css_style         = $main_css_style_inline . $main_css_style;
-        $body_content           = '';
+        $main_css_style = $main_css_style_inline . $main_css_style;
+        $body_content = '';
         if (!$email_printout) {
-          $body_content           = '<p style="text-align:center;">';
+          $body_content = '<p style="text-align:center;">';
           if ($skipAuth) {
-            $body_content .= '<a class="print-button" href="javascript:;" onclick="window.print();return false;" >' . __("PRINT", $this->td) . '</a>';
-            $body_content .= '<a class="print-button" href="javascript:;" onclick="window.open(window.location.href.replace(\'?invoice=\',\'?invoice-pdf=\'))" >' . __("GET PDF", $this->td) . '</a>';
+            $body_content .= '<a class="print-button" href="javascript:;" onclick="window.print();return false;" >' . __("PRINT", "pepro-ultimate-invoice") . '</a>';
+            $body_content .= '<a class="print-button" href="javascript:;" onclick="window.open(window.location.href.replace(\'?invoice=\',\'?invoice-pdf=\'))" >' . __("GET PDF", "pepro-ultimate-invoice") . '</a>';
           } else {
             if ($this->has_access("HTML", $order)) {
-              $body_content .= '<a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", $this->td) . '</a>';
+              $body_content .= '<a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", "pepro-ultimate-invoice") . '</a>';
             }
             if ($this->has_access("PDF", $order)) {
-              $body_content .= '<a class="print-button" href="javascript:;" onclick="window.open(window.location.href.replace(\'?invoice=\',\'?invoice-pdf=\'))" >' . __("GET PDF", $this->td) . '</a>';
+              $body_content .= '<a class="print-button" href="javascript:;" onclick="window.open(window.location.href.replace(\'?invoice=\',\'?invoice-pdf=\'))" >' . __("GET PDF", "pepro-ultimate-invoice") . '</a>';
             }
           }
-          $body_content           .= '</p>';
+          $body_content .= '</p>';
         }
         $body_content           .= file_get_contents("$templateDirpath/template.tpl");
         $invoicehtmltitle       = "{{{invoice_title}}} | {{{store_name}}}";
@@ -632,9 +663,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         $product_row_RAW        = file_get_contents("$templateDirpath/template.row.tpl");
         $template               = "<!DOCTYPE html><html lang=\"fa\" dir=\"ltr\"><head><title>$invoicehtmltitle</title>$extrainvoiceheaddata<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" /><style type='text/css'>{$main_css_style}{{{custom_css_style}}}</style></head>$body_content</html>";
       }
-
-      $n = 0;
-      $total_weight = 0;
+      $n = 0; $total_weight = 0;
       foreach (apply_filters("puiw_order_items", $order->get_items(), $order) as $item_id => $item) {
         $n += 1;
         $product_row  = ($product_row_RAW);
@@ -885,7 +914,6 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       if (apply_filters("puiw_printinvoice_return_html_minfied", true, $template, $opt, $order)) {
         $template = $this->minify_html($template);
       }
-
       do_action("puiw_printinvoice_after_create_html", $opt, $opts, $order);
       do_action("puiw_printinvoice_before_return_html", $opt, $opts, $order);
       echo apply_filters("puiw_printinvoice_return_html", $template, $opt, $opts, $order);
@@ -896,15 +924,16 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
     }
     public function calc_precentage($offprice = 0, $realprice = 0) {
       // 100 - (newPrice / wasPrice) * 100
+      if ($realprice == 0) { return 0; }
       return round(100 - (($offprice / $realprice) * 100), 5);
     }
-    public function create_pdf($order_id = 0, $force_download = false, $MODE = "I", $showerror = true) {
+    public function create_pdf($order_id = 0, $force_download = false, $MODE = "I", $showerror = true, $fit_height=false) {
       // 'D': download the PDF file
       // 'I': serves in-line to the browser
       // 'S': returns the PDF document as a string
       // 'F': save as file $file_out
       if (!$order_id || empty(trim($order_id)) || !is_numeric(trim($order_id))) {
-        return __('Incorrect data!', $this->td);
+        return __('Incorrect data!', "pepro-ultimate-invoice");
       }
       (int) $order_id = trim($order_id);
       $order = wc_get_order($order_id);
@@ -916,7 +945,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         $skipAuth = false;
         if (!$this->has_access("PDF", $order)) {
           global $PeproUltimateInvoice;
-          $PeproUltimateInvoice->die("printClass_create_pdf auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+          $PeproUltimateInvoice->die("printClass_create_pdf auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
         }
       }
       if (!$this->CheckPDFRequirements()) {
@@ -933,13 +962,9 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       $fontDirs               = $defaultConfig['fontDir'];
       $defaultFontConfig      = (new \Mpdf\Config\FontVariables())->getDefaults();
       $fontData               = $defaultFontConfig['fontdata'];
-
       $template               = $this->fn->get_template();
       $templateDirpath        = apply_filters("puiw_get_template_dir_path", $template, $order);
-
-
       $contents               = file_get_contents("$templateDirpath/default.cfg");
-
       $template_pdf_setting   = $this->parseTemplate($contents);
       /* if we had an error, don't let script stop !*/
       $get_allow_pdf_customer = $this->fn->get_allow_pdf_customer();
@@ -992,9 +1017,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       ];
 
 
-      if ("L" == $get_pdf_orientation) {
-        $get_pdf_size = "$get_pdf_size-L";
-      }
+      if ("L" == $get_pdf_orientation) $get_pdf_size = "$get_pdf_size-L";
       // https://mpdf.github.io/paging/page-size-orientation.html
       $get_pdf_size = apply_filters("puiw_generate_pdf_page_size", $get_pdf_size, $order_id, $order, "PDF");
 
@@ -1004,7 +1027,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       @ini_set("display_errors", 0);
       @ini_set("max_execution_time", "300");
       @ini_set("pcre.backtrack_limit", PHP_INT_MAX);
-      @ini_set('memory_limit', '2048M');
+      @ini_set('memory_limit', '20480M');
 
       try {
         $mpdf = new \Mpdf\Mpdf(apply_filters("puiw_create_pdf_Mpdf_options", array(
@@ -1013,18 +1036,22 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
           "fontdata"               => $_fontData,
           "default_font"           => $this->fn->get_pdf_font(),
           "format"                 => $get_pdf_size, // A4-L
-          "margin_right"           => $template_pdf_setting["pdf_margin_right"],
-          "margin_left"            => $template_pdf_setting["pdf_margin_left"],
-          "margin_top"             => $template_pdf_setting["pdf_margin_top"],
-          "margin_bottom"          => $template_pdf_setting["pdf_margin_bottom"],
-          "margin_header"          => $template_pdf_setting["pdf_margin_header"],
-          "margin_footer"          => $template_pdf_setting["pdf_margin_footer"],
+          "margin_right"           => (float) $template_pdf_setting["pdf_margin_right"] + (!$fit_height ? (float) $this->fn->get_margin_right() : 0),
+          "margin_left"            => (float) $template_pdf_setting["pdf_margin_left"]  + (!$fit_height ? (float) $this->fn->get_margin_left() : 0),
+          "margin_top"             => (float) $template_pdf_setting["pdf_margin_top"]   + (!$fit_height ? (float) $this->fn->get_margin_top() : 0),
+          "margin_bottom"          => (float) $template_pdf_setting["pdf_margin_bottom"]+ (!$fit_height ? (float) $this->fn->get_margin_bottom() : 0),
+          "margin_header"          => (float) $template_pdf_setting["pdf_margin_header"]+ (!$fit_height ? (float) $this->fn->get_margin_header() : 0),
+          "margin_footer"          => (float) $template_pdf_setting["pdf_margin_footer"]+ (!$fit_height ? (float) $this->fn->get_margin_footer() : 0),
           "debug"                  => false,
           "allow_output_buffering" => true,
           "showImageErrors"        => false,
           "mirrorMargins"          => false,
-          "autoPageBreak"          => false,
-          "setAutoBottomMargin"    => false,
+          // Enable automatic page breaking and let mPDF manage bottom margins so table
+          // rows are distributed more evenly across pages (fixes fragmented pages).
+          // "autoPageBreak"          => true,
+          // "setAutoBottomMargin"    => true,
+          // // Prefer slicing behaviour for pagebreak handling (closer to older mPDF versions)
+          // "defaultPagebreakType"   => 'slice',
           "watermarkImgBehind"     => false,
           "watermarkImgAlphaBlend" => $daynamic_params["watermark_blend"],
           "autoLangToFont"         => true,
@@ -1063,8 +1090,8 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
             sprintf(_x('%sBack to Orders%s', 'invoice-template', $PeproUltimateInvoice->td), "<a href='" . wc_get_endpoint_url('orders', '', get_permalink(get_option('woocommerce_myaccount_page_id'))) . "'>", '</a>') .
             "</span></p></body>";
           $mpdf->WriteHTML($err_html);
-        } else {
-
+        }
+        else {
           $stylesheet      = $this->get_pdf_style($order_id, $order);
           $PDF_EXTRA_STYLE = $this->create_html($order_id, "PDF_EXTRA_STYLE", "", "", $skipAuth);
           $stylesheet      = $PDF_EXTRA_STYLE . $stylesheet;
@@ -1072,7 +1099,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
           $html_header     = $this->create_html($order_id, "PDF", "header", "", $skipAuth);
           $html_footer     = $this->create_html($order_id, "PDF", "footer", "", $skipAuth);
           $footerhtml      = "<div class='footerauto' style='text-align: center; padding: 1rem;' dir='$dire'><table width='100%'><tr>
-                <td style=\"padding: 1rem; text-align: center; width: 33%;\">" . _x("Page", "invoice-footer", $this->td) . " {PAGENO} / {nbpg}</td>
+                <td style=\"padding: 1rem; text-align: center; width: 33%;\">" . _x("Page", "invoice-footer", "pepro-ultimate-invoice") . " {PAGENO} / {nbpg}</td>
                 <td style=\"padding: 1rem; text-align: center; width: 33%;\">{$pdf_title}</td>
                 <td style=\"padding: 1rem; text-align: center; width: 33%;\">{$PeproUltimateInvoice->title_t} (https://pepro.dev)</td>
               <tr></table></div>";
@@ -1081,7 +1108,24 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
           $mpdf->SetHTMLHeader($html_header);
           $mpdf->SetHTMLFooter($html_footer . $footerhtml);
           $mpdf->WriteHTML($stylesheet, \Mpdf\HTMLParserMode::HEADER_CSS);
-          $mpdf->WriteHTML($html_invoice, \Mpdf\HTMLParserMode::HTML_BODY);
+
+          // allow printing 8cm-yh thermal-invoices
+          $fit_height = apply_filters("puiw_create_pdf_fit_height", $fit_height, $order_id, $order, $MODE);
+          if ($fit_height) {
+            $p = 'P';
+            $mpdf->_setPageSize(array(76, 2970), $p);
+            $html_invoice = mb_convert_encoding($html_invoice, 'UTF-8', 'auto');
+            $mpdf->WriteHTML($html_invoice, \Mpdf\HTMLParserMode::HTML_BODY);
+            $mpdf->page  = 0;
+            $mpdf->state = 0;
+            unset($mpdf->pages[0]);
+            $mpdf->_setPageSize(array(76, $mpdf->y + 4), $p);
+            $mpdf->addPage();
+            $mpdf->WriteHTML($html_invoice, \Mpdf\HTMLParserMode::HTML_BODY);
+          }
+          else{
+            $mpdf->WriteHTML($html_invoice, \Mpdf\HTMLParserMode::HTML_BODY);
+          }
         }
 
         $datetime = date_i18n("Y_m_d_H_i_s", $datenow);
@@ -1108,7 +1152,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
     }
     public function create_slips_pdf($order_id = 0, $force_download = false, $MODE = "I", $showerror = true) {
       if (!$order_id || empty(trim($order_id)) || !is_numeric(trim($order_id))) {
-        return __('Incorrect data!', $this->td);
+        return __('Incorrect data!', "pepro-ultimate-invoice");
       }
       (int) $order_id = trim($order_id);
       $order = wc_get_order($order_id);
@@ -1120,7 +1164,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         $skipAuth = false;
         if (!$this->has_access("PDF", $order)) {
           global $PeproUltimateInvoice;
-          $PeproUltimateInvoice->die("printClass_create_pdf auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+          $PeproUltimateInvoice->die("printClass_create_pdf auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
         }
       }
       if (!$this->CheckPDFRequirements()) {
@@ -1140,7 +1184,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       $contents                = file_get_contents("$templateDirpath/default.cfg");
       $template_pdf_setting    = $this->parseTemplate($contents);
       $get_allow_pdf_customer  = $this->fn->get_allow_pdf_customer();
-      $get_pdf_size            = $this->fn->get_pdf_size() . ("L" == $this->fn->get_pdf_orientation() ? "-L" : "");
+      $get_pdf_size            = $this->fn->get_pdf_size_slip() . ("L" == $this->fn->get_pdf_orientation() ? "-L" : "");
       $_fontData               = $fontData + [
         'dejavu' => [
           'R' => 'DejaVuSans.ttf',
@@ -1205,8 +1249,13 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
         'allow_output_buffering' => true,
         'showImageErrors'        => false,
         'mirrorMargins'          => 0,
+        // Enable automatic page breaking and let mPDF manage bottom margins
+        // to distribute table rows evenly across pages.
+        // 'autoPageBreak'          => true,
+        // 'setAutoBottomMargin'    => true,
+        // 'defaultPagebreakType'   => 'slice',
         'autoLangToFont'         => true,
-        '4defaultPageNumStyle'    => 'arabic-indic',
+        'defaultPageNumStyle'    => 'arabic-indic',
       ), $order, $template_pdf_setting, $opts));
       $opts = apply_filters("puiw_generate_pdf_name_orderid_format", array(
         "invoice_prefix" => $this->fn->get_invoice_prefix(),
@@ -1259,21 +1308,21 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
     }
     public function create_slips($order_id = 0, $MODE = "HTML") {
       if (!$order_id || empty(trim($order_id)) || !is_numeric(trim($order_id))) {
-        return __('Incorrect data!', $this->td);
+        return __('Incorrect data!', "pepro-ultimate-invoice");
       }
       (int) $order_id = trim($order_id);
       $order          = wc_get_order($order_id);
       if (!$order) {
-        return __('Incorrect Order!', $this->td);
+        return __('Incorrect Order!', "pepro-ultimate-invoice");
       }
 
       if ("HTML" == $MODE && !$this->has_access("HTML", $order)) {
         global $PeproUltimateInvoice;
-        $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+        $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
       }
       if ("PDF" == $MODE && !$this->has_access("PDF", $order)) {
         global $PeproUltimateInvoice;
-        $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+        $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
       }
 
       ob_start();
@@ -1286,31 +1335,58 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       do_action("puiw_printslips_before_create_html", $opt, $opts, $order);
       $extrainvoiceheaddata  = '';
       $main_css_style        = file_get_contents("$templateDirpath/style.slips" . ("PDF" == $MODE || "CSS" == $MODE ? ".pdf" : "") . ".css");
-      $body_content          = "PDF" == $MODE ? "" : '<p style="text-align:center;"><a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", $this->td) . '</a></p>';
+      $body_content          = "PDF" == $MODE ? "" : '<p style="text-align:center;"><a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", "pepro-ultimate-invoice") . '</a></p>';
       $body_content         .= file_get_contents("$templateDirpath/template.slips" . ("PDF" == $MODE ? ".pdf" : "") . ".tpl");
       $invoicehtmltitle      = "PDF" == $MODE ? "" : "{{{invoice_title}}} | {{{store_name}}}";
-      $order_note_a          = apply_filters("puiw_printslips_order_note_customer", "<strong>" . __("Note provided by Customer", $this->td) . "</strong><br>" . $this->fn->get_order_note($order, "a"), $this->fn->get_order_note($order, "a"), $order, $opt);
-      $order_note_b          = apply_filters("puiw_printslips_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", $this->td) . "</strong><br>" . $this->fn->get_order_note($order, "b"), $this->fn->get_order_note($order, "b"), $order, $opt);
+      $order_note_a          = apply_filters("puiw_printslips_order_note_customer", "<strong>" . __("Note provided by Customer", "pepro-ultimate-invoice") . "</strong><br>" . $this->fn->get_order_note($order, "a"), $this->fn->get_order_note($order, "a"), $order, $opt);
+      $order_note_b          = apply_filters("puiw_printslips_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", "pepro-ultimate-invoice") . "</strong><br>" . $this->fn->get_order_note($order, "b"), $this->fn->get_order_note($order, "b"), $order, $opt);
 
-      switch ($opt["show_order_note"]) {
-        case 'note_provided_by_customer':
-          $notes = "<td>$order_note_a</td>";
-          $opt["show_order_note"] = "yes";
+      $notes = ""; $opt["show_order_notes_slip"] = "no";
+      $opt["show_invoice_note_customer_slip"] = "no";
+      $opt["show_invoice_note_shopmngr_slip"] = "no";
+      $opt["invoice_note_customer_slip"] = "";
+      $opt["invoice_note_shopmngr_slip"] = "";
+      switch ($opt["show_order_note_slip"]) {
+        // hide_note_from_invoice, note_provided_by_customer, note_provided_by_shop_manager, note_provided_by_both
+        case "note_provided_by_customer":
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "a")))) {
+            $notes = "<td>$order_note_a</td>";
+            $opt["invoice_note_customer_slip"] = $order_note_a;
+            $opt["show_order_notes_slip"] = "yes";
+            $opt["show_invoice_note_customer_slip"] = "yes";
+          }
           break;
-        case 'note_provided_by_shop_manager':
-          $notes = "<td>$order_note_b</td>";
-          $opt["show_order_note"] = "yes";
+        case "note_provided_by_shop_manager":
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "b")))) {
+            $notes = "<td>$order_note_b</td>";
+            $opt["invoice_note_shopmngr_slip"] = $order_note_b;
+            $opt["show_order_notes_slip"] = "yes";
+            $opt["show_invoice_note_shopmngr_slip"] = "yes";
+          }
           break;
-        case 'note_provided_by_both':
-          $notes = "<td>$order_note_b</td>
-                        <td>$order_note_a</td>";
-          $opt["show_order_note"] = "yes";
+        case "note_provided_by_both":
+          $notes = "";
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "a")))) {
+            $notes .= "<td>$order_note_a</td>";
+            $opt["invoice_note_customer_slip"] = $order_note_a;
+            $opt["show_invoice_note_customer_slip"] = "yes";
+          }
+          if (!empty(trim( (string) $this->fn->get_order_note($order, "b")))) {
+            $notes .= "<td>$order_note_b</td>";
+            $opt["invoice_note_shopmngr_slip"] = $order_note_b;
+            $opt["show_invoice_note_shopmngr_slip"] = "yes";
+          }
+          $opt["show_order_notes_slip"] = "yes";
           break;
         default:
           $notes = "";
-          $opt["show_order_note"] = "no";
+          $opt["show_order_notes_slip"] = "no";
+          $opt["show_invoice_note_customer_slip"] = "no";
+          $opt["show_invoice_note_shopmngr_slip"] = "no";
           break;
       }
+      $opt["invoice_notes_slip"] = $notes;
+
       foreach ($opt as $key => $value) {
         if (substr($key, 0, 5) == "show_" && $value !== "yes") {
           $main_css_style .= "[if~='$key']{display:none !important;}.$key{display:none !important;}";
@@ -1427,7 +1503,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
 
         $optm = array(
           "n"             => $n,
-          "img"           => ("PDF" == $MODE) ? $product->get_image(array(50, 50)) : $product->get_image('shop_thumbnail'),
+          "img"           => $product->get_image(array(50, 50)),
           "sku"           => $sku,
           "title"         => $name,
           "qty"           => $quantity,
@@ -1491,20 +1567,20 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
     }
     public function create_inventory($order_id = 0, $MODE = "HTML") {
       if (!$order_id || empty(trim($order_id)) || !is_numeric(trim($order_id))) {
-        return __('Incorrect data!', $this->td);
+        return __('Incorrect data!', "pepro-ultimate-invoice");
       }
       (int) $order_id = trim($order_id);
       $order = wc_get_order($order_id);
       if (!$order) {
-        return __('Incorrect Order!', $this->td);
+        return __('Incorrect Order!', "pepro-ultimate-invoice");
       }
       if ("HTML" == $MODE && !$this->has_access("HTML", $order)) {
         global $PeproUltimateInvoice;
-        $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+        $PeproUltimateInvoice->die("printClass_create_html auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
       }
       if ("PDF" == $MODE && !$this->has_access("PDF", $order)) {
         global $PeproUltimateInvoice;
-        $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", $this->td), $PeproUltimateInvoice->Unauthorized_Access);
+        $PeproUltimateInvoice->die("printClass_create_html_pdf auth_check", __("Err 403 - Access Denied", "pepro-ultimate-invoice"), $PeproUltimateInvoice->Unauthorized_Access);
       }
       ob_start();
       $opts = $this->get_default_dynamic_params($order_id, $order);
@@ -1518,12 +1594,12 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
       do_action("puiw_printinventory_before_create_html", $opt, $opts, $order);
       $extrainvoiceheaddata = '';
       $main_css_style = file_get_contents("$templateDirpath/style.inventory.css");
-      $body_content = '<p style="text-align:center;"><a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", $this->td) . '</a></p>';
+      $body_content = '<p style="text-align:center;"><a class="print-button" href="javascript:;" onclick="window.print();return false;">' . __("PRINT", "pepro-ultimate-invoice") . '</a></p>';
       $body_content .= file_get_contents("$templateDirpath/template.inventory.tpl");
       $invoicehtmltitle = "{{{invoice_title}}} | {{{store_name}}}";
       $extrainvoiceheaddata .= '<script src="' . PEPROULTIMATEINVOICE_URL . '/assets/js/qrcode.min.js"></script>';
-      $order_note_a = apply_filters("puiw_printinventory_order_note_customer", "<strong>" . __("Note provided by Customer", $this->td) . "</strong><br>" . $this->fn->get_order_note($order, "a"), $this->fn->get_order_note($order, "a"), $order, $opt);
-      $order_note_b = apply_filters("puiw_printinventory_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", $this->td) . "</strong><br>" . $this->fn->get_order_note($order, "b"), $this->fn->get_order_note($order, "b"), $order, $opt);
+      $order_note_a = apply_filters("puiw_printinventory_order_note_customer", "<strong>" . __("Note provided by Customer", "pepro-ultimate-invoice") . "</strong><br>" . $this->fn->get_order_note($order, "a"), $this->fn->get_order_note($order, "a"), $order, $opt);
+      $order_note_b = apply_filters("puiw_printinventory_order_note_shopmngr", "<strong>" . __("Note provided by Shop manager", "pepro-ultimate-invoice") . "</strong><br>" . $this->fn->get_order_note($order, "b"), $this->fn->get_order_note($order, "b"), $order, $opt);
       $opt["show_inventory_price"] = "yes";
       if ($opt["price_inventory_report"] == "hide_all_price") {
         $opt["show_inventory_price"] = "no";
@@ -1649,7 +1725,7 @@ if (!class_exists("PeproUltimateInvoice_Print")) {
 
         $optm = array(
           "n" => $n,
-          "img" => ("PDF" == $MODE) ? $product->get_image(array(50, 50)) : $product->get_image('shop_thumbnail'),
+          "img" => $product->get_image(array(50, 50)),
           "sku" => $sku,
           "title" => $name,
           "qty" => $quantity,
